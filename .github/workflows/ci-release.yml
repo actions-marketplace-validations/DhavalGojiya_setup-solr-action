@@ -6,11 +6,21 @@ on:
       - "v[0-9]"   # Major version release (e.g., v1, v2, ..., v9)
 
 jobs:
+  # -----------------------------
+  # Job 1: Solr Release Test
+  # -----------------------------
   solr-release-test:
+    name: solr-release-test (Solr ${{ matrix.solr-version }})
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     strategy:
       matrix:
-        solr-version: ["8.9.0"]   # Matrix versions
+        include:
+          - solr-version: "8"
+            configset: "tests/fixtures/solr_configs/8.x.x"
+          - solr-version: "9"
+            configset: "tests/fixtures/solr_configs/9.x.x"
     env:
       SOLR_CORE: test_core
     steps:
@@ -18,7 +28,9 @@ jobs:
       # 1. Checkout Repository
       # -----------------------------
       - name: 📥 Checkout Repository
-        uses: actions/checkout@v5
+        uses: actions/checkout@v6
+        with:
+          persist-credentials: false
 
       # -----------------------------
       # 2. Setup Apache Solr (Release Action)
@@ -28,7 +40,7 @@ jobs:
         with:
           solr-version: ${{ matrix.solr-version }}
           solr-core-name: ${{ env.SOLR_CORE }}
-          solr-custom-configset-path: tests/fixtures/solr_configs/
+          solr-custom-configset-path: ${{ matrix.configset }}
 
       # -----------------------------
       # 3. Verify Solr is Running
